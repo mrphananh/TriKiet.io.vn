@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="night">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nguyễn Lê Trí Kiệt | Biên tập viên Wikipedia</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- daisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- AOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Space Grotesk"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#06b6d4',
+                        secondary: '#8b5cf6',
+                        accent: '#f472b6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background: #0a0a18;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-premium {
+            background: rgba(10, 10, 30, 0.5);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-premium-light {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-gradient-animated {
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6, #f472b6, #06b6d4);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease-in-out infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .card-3d {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            perspective: 800px;
+        }
+        .card-3d:hover {
+            transform: translateY(-12px) rotateX(2deg) rotateY(2deg) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .glow-pulse {
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.4); }
+        }
+
+        .scroll-indicator {
+            animation: scrollBounce 2s ease-in-out infinite;
+        }
+        @keyframes scrollBounce {
+            0%, 100% { transform: translateY(0); opacity: 0.3; }
+            50% { transform: translateY(10px); opacity: 1; }
+        }
+
+        .skill-bar {
+            position: relative;
+            height: 6px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .skill-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+            transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            width: 0;
+        }
+        .skill-bar .fill.animate {
+            animation: fillBar 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes fillBar {
+            from { width: 0; }
+            to { width: var(--target); }
+        }
+
+        .float-particle {
+            animation: floatParticle 6s ease-in-out infinite;
+        }
+        @keyframes floatParticle {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(10deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper { padding: 0 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div class="content-wrapper">
+
+        <!-- ====== NAVBAR ====== -->
+        <div class="navbar glass-premium fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-2xl px-6 py-2 w-[95%] max-w-6xl border border-white/5 shadow-2xl shadow-black/30">
+            <div class="flex-1">
+                <a class="btn btn-ghost text-xl font-bold tracking-tight gap-2 hover:bg-transparent">
+                    <i class="fas fa-feather-alt text-primary float-particle"></i>
+                    <span class="hidden sm:inline text-white/90">NLTK</span><span class="text-primary">.io</span>
+                </a>
+            </div>
+            <div class="flex-none hidden lg:flex">
+                <ul class="menu menu-horizontal px-1 font-medium gap-1">
+                    <li><a href="#about" class="hover:text-primary transition-all duration-300 hover:bg-primary/10 rounded-full px-4 text-white/70 hover:text-white">Giới thiệu</a></li>
+                    <li><a href="#stats" class="hover:text-primary transition-all duration-300 hover:bg-primary/10 rounded-full px-4 text-white/70 hover:text-white">Thành tựu</a></li>
+                    <li><a href="#services" class="hover:text-primary transition-all duration-300 hover:bg-primary/10 rounded-full px-4 text-white/70 hover:text-white">Dịch vụ</a></li>
+                    <li><a href="#skills" class="hover:text-primary transition-all duration-300 hover:bg-primary/10 rounded-full px-4 text-white/70 hover:text-white">Kỹ năng</a></li>
+                    <li><a href="#contact" class="hover:text-primary transition-all duration-300 hover:bg-primary/10 rounded-full px-4 text-white/70 hover:text-white">Kết nối</a></li>
+                </ul>
+            </div>
+            <div class="flex-none lg:hidden">
+                <button class="btn btn-square btn-ghost" onclick="mobile_menu.showModal()">
+                    <i class="fas fa-bars text-xl text-white/70"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ====== MOBILE MENU ====== -->
+        <dialog id="mobile_menu" class="modal">
+            <div class="modal-box glass-premium border border-white/10">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-3 text-white">
+                    <i class="fas fa-feather-alt text-primary"></i> NLTK.io
+                </h3>
+                <ul class="menu w-full gap-2">
+                    <li><a href="#about" onclick="mobile_menu.close()" class="text-white/80 hover:text-primary transition-colors text-lg"><i class="fas fa-user mr-3 text-primary/60"></i>Giới thiệu</a></li>
+                    <li><a href="#stats" onclick="mobile_menu.close()" class="text-white/80 hover:text-primary transition-colors text-lg"><i class="fas fa-chart-line mr-3 text-primary/60"></i>Thành tựu</a></li>
+                    <li><a href="#services" onclick="mobile_menu.close()" class="text-white/80 hover:text-primary transition-colors text-lg"><i class="fas fa-hand-peace mr-3 text-primary/60"></i>Dịch vụ</a></li>
+                    <li><a href="#skills" onclick="mobile_menu.close()" class="text-white/80 hover:text-primary transition-colors text-lg"><i class="fas fa-brain mr-3 text-primary/60"></i>Kỹ năng</a></li>
+                    <li><a href="#contact" onclick="mobile_menu.close()" class="text-white/80 hover:text-primary transition-colors text-lg"><i class="fas fa-envelope mr-3 text-primary/60"></i>Kết nối</a></li>
+                </ul>
+                <div class="modal-action">
+                    <form method="dialog">
+                        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 text-xl text-white/50">✕</button>
+                    </form>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop">
+                <button>close</button>
+            </form>
+        </dialog>
+
+        <!-- ====== HERO ====== -->
+        <section class="relative min-h-screen flex items-center justify-center pt-24 pb-12 px-4">
+            <div class="container mx-auto text-center relative z-10" data-aos="fade-up" data-aos-duration="1200">
+                <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full glass-premium-light border border-primary/20 shadow-lg shadow-primary/5 mb-8">
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                    </span>
+                    <span class="text-sm font-semibold tracking-wide text-primary">Biên tập viên Wikipedia Đa ngôn ngữ</span>
+                </div>
+
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-[1.1]">
+                    Nguyễn Lê <br class="sm:hidden">
+                    <span class="text-gradient-animated">Trí Kiệt</span>
+                </h1>
+
+                <p class="text-xl md:text-2xl text-white/50 mb-4 font-light italic">
+                    <i class="fas fa-quote-left text-primary/30 mr-2"></i>
+                    "Hữu duyên - Chia sẻ tri thức - Kết nối cộng đồng"
+                    <i class="fas fa-quote-right text-primary/30 ml-2"></i>
+                </p>
+
+                <p class="text-white/40 max-w-2xl mx-auto mb-10 text-lg md:text-xl leading-relaxed">
+                    3 năm đam mê đóng góp, chắt lọc thông tin hữu ích và lan tỏa văn hóa đọc qua các nền tảng tri thức mở toàn cầu.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#contact" class="btn btn-primary btn-lg gap-3 glow-pulse transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40">
+                        <i class="fas fa-paper-plane"></i> Kết nối ngay
+                    </a>
+                    <a href="#services" class="btn btn-outline btn-lg gap-3 hover:bg-white/5 transition-all duration-300 border-white/20 hover:border-primary/50 text-white/70 hover:text-white">
+                        <i class="fas fa-compass"></i> Khám phá dịch vụ
+                    </a>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 text-white/20">
+                <span class="text-xs font-medium tracking-widest uppercase">Cuộn xuống</span>
+                <i class="fas fa-chevron-down text-2xl scroll-indicator"></i>
+            </div>
+        </section>
+
+        <!-- ====== STATS ====== -->
+        <section id="stats" class="py-12 px-4 container mx-auto -mt-6 relative z-20" data-aos="fade-up" data-aos-delay="200">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="stat glass-premium rounded-2xl p-6 text-center border border-white/5 hover:border-primary/30 transition-all duration-500 card-3d">
+                    <div class="stat-figure text-primary mb-2">
+                        <i class="fas fa-clock text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/40 text-sm uppercase tracking-wider">Kinh nghiệm</div>
+                    <div class="stat-value text-primary text-4xl font-bold">3+</div>
+                    <div class="stat-desc text-white/30 text-sm">Năm hoạt động</div>
+                </div>
+
+                <div class="stat glass-premium rounded-2xl p-6 text-center border border-white/5 hover:border-secondary/30 transition-all duration-500 card-3d">
+                    <div class="stat-figure text-secondary mb-2">
+                        <i class="fab fa-wikipedia-w text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/40 text-sm uppercase tracking-wider">Bài viết</div>
+                    <div class="stat-value text-secondary text-4xl font-bold">40+</div>
+                    <div class="stat-desc text-white/30 text-sm">Đa lĩnh vực</div>
+                </div>
+
+                <div class="stat glass-premium rounded-2xl p-6 text-center border border-white/5 hover:border-accent/30 transition-all duration-500 card-3d">
+                    <div class="stat-figure text-accent mb-2">
+                        <i class="fas fa-language text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/40 text-sm uppercase tracking-wider">Bản dịch</div>
+                    <div class="stat-value text-accent text-4xl font-bold">20+</div>
+                    <div class="stat-desc text-white/30 text-sm">Từ EN/FR</div>
+                </div>
+
+                <div class="stat glass-premium rounded-2xl p-6 text-center border border-white/5 hover:border-info/30 transition-all duration-500 card-3d">
+                    <div class="stat-figure text-info mb-2">
+                        <i class="fas fa-globe text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/40 text-sm uppercase tracking-wider">Ngôn ngữ</div>
+                    <div class="stat-value text-info text-4xl font-bold">5+</div>
+                    <div class="stat-desc text-white/30 text-sm">Đa ngôn ngữ</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== ABOUT ====== -->
+        <section id="about" class="py-20 px-4 container mx-auto">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div data-aos="fade-right" data-aos-duration="800">
+                    <div class="badge badge-primary badge-outline badge-lg px-4 py-3 mb-4 border-primary/30 text-primary"><i class="fas fa-user mr-2"></i> Về tôi</div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6 leading-tight text-white">
+                        Đam mê đóng góp cho <br><span class="text-gradient-animated">tri thức nhân loại</span>
+                    </h2>
+                    <div class="space-y-4 text-white/60 text-lg leading-relaxed">
+                        <p>
+                            Với tôi, niềm đam mê lớn nhất khi làm biên tập viên Wikipedia là <strong class="text-primary">cảm giác vui vẻ khi được đóng góp cho cộng đồng</strong>. Mỗi thông tin chính xác được tái hiện, mỗi bài viết được góp nhặt đều mang lại sự bổ ích thực sự cho người khác khi họ tra cứu.
+                        </p>
+                        <p>
+                            Bên cạnh Wikipedia, tôi còn có kinh nghiệm xây dựng và phát triển nội dung trên các nền tảng như <strong class="text-secondary">Tinhte, Blogger</strong> và nhiều đầu báo điện tử khác, với thế mạnh về các chủ đề <strong class="text-accent">Văn học - Lịch sử - Địa lý</strong>.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mt-8">
+                        <div class="badge badge-lg glass-premium-light border-white/10 gap-2 p-4 hover:border-primary/50 hover:bg-primary/5 transition-all hover:scale-105 cursor-default text-white/70">
+                            <i class="fas fa-landmark text-primary"></i> Lịch sử
+                        </div>
+                        <div class="badge badge-lg glass-premium-light border-white/10 gap-2 p-4 hover:border-secondary/50 hover:bg-secondary/5 transition-all hover:scale-105 cursor-default text-white/70">
+                            <i class="fas fa-flask text-secondary"></i> Khoa học
+                        </div>
+                        <div class="badge badge-lg glass-premium-light border-white/10 gap-2 p-4 hover:border-accent/50 hover:bg-accent/5 transition-all hover:scale-105 cursor-default text-white/70">
+                            <i class="fas fa-plane text-accent"></i> Hàng không
+                        </div>
+                        <div class="badge badge-lg glass-premium-light border-white/10 gap-2 p-4 hover:border-info/50 hover:bg-info/5 transition-all hover:scale-105 cursor-default text-white/70">
+                            <i class="fas fa-film text-info"></i> Điện ảnh
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative" data-aos="fade-left" data-aos-duration="800">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-primary via-secondary to-accent rounded-3xl blur-2xl opacity-20 animate-pulse"></div>
+                    <div class="relative glass-premium border border-white/10 p-8 md:p-12 rounded-3xl shadow-2xl">
+                        <i class="fas fa-quote-left text-5xl text-primary/20 mb-4 block"></i>
+                        <h3 class="text-2xl md:text-3xl font-bold mb-4 text-white">Tinh thần <span class="text-gradient-animated">"Vui là chính!"</span></h3>
+                        <p class="text-white/50 italic leading-relaxed mb-6 text-lg">
+                            "Giữ lửa đam mê trong mọi dự án. Sự chính xác, tận tâm và tinh thần học hỏi không ngừng là cách tôi tôn trọng tri thức và người đọc."
+                        </p>
+                        <div class="divider border-white/5"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="avatar placeholder">
+                                <div class="bg-gradient-to-br from-primary to-secondary text-white rounded-full w-14 h-14 flex items-center justify-center">
+                                    <span class="text-xl font-bold">K</span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-bold text-lg text-white">Cộng đồng Wikipedia</div>
+                                <div class="text-sm text-white/40">Luôn được hỗ trợ và sẵn sàng giúp đỡ người mới</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SERVICES ====== -->
+        <section id="services" class="py-20 px-4 relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent pointer-events-none"></div>
+
+            <div class="container mx-auto relative z-10">
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <div class="badge badge-secondary badge-outline badge-lg px-4 py-3 mb-4 border-secondary/30 text-secondary"><i class="fas fa-hand-peace mr-2"></i> Dịch vụ & Hỗ trợ</div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4 text-white">Tôi có thể làm gì cho bạn?</h2>
+                    <p class="text-white/40 max-w-2xl mx-auto text-lg">Sẵn sàng hỗ trợ, chia sẻ và giao lưu cùng bạn trong nhiều lĩnh vực đa dạng.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card glass-premium border border-white/5 hover:border-primary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="0">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
+                                <i class="fab fa-wikipedia-w text-2xl text-primary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Hỗ trợ Wikipedia</h3>
+                            <p class="text-sm text-white/40">Hướng dẫn tạo, biên tập và chỉnh sửa trang Wikipedia từ A-Z cho người mới.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-primary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-code text-2xl text-primary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Mã & Biểu mẫu Wiki</h3>
+                            <p class="text-sm text-white/40">Chia sẻ kiến thức về wikitext, bản mẫu và mã định dạng nâng cao.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-primary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-balance-scale text-2xl text-primary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Luật lệ nền tảng</h3>
+                            <p class="text-sm text-white/40">Giải đáp về quy định, nguyên tắc và văn phong chuẩn trên Wiki.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-primary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-book-open text-2xl text-primary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Văn hóa Đọc & Viết</h3>
+                            <p class="text-sm text-white/40">Giao lưu về kinh nghiệm đọc sách, nghiên cứu tài liệu và viết lách.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-secondary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="0">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-edit text-2xl text-secondary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Kinh nghiệm biên tập</h3>
+                            <p class="text-sm text-white/40">Chia sẻ thực tế về xử lý lỗi và tương tác cộng đồng.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-secondary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="100">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-laptop-code text-2xl text-secondary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Tinhte & Blogger</h3>
+                            <p class="text-sm text-white/40">Hỗ trợ tạo bài và tối ưu nội dung trên Tinhte, Blogger.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-secondary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-globe-asia text-2xl text-secondary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Văn - Sử - Địa</h3>
+                            <p class="text-sm text-white/40">Trao đổi chuyên sâu về Văn học, Lịch sử, Địa lý.</p>
+                        </div>
+                    </div>
+
+                    <div class="card glass-premium border border-white/5 hover:border-secondary/30 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="300">
+                        <div class="card-body items-center text-center p-6">
+                            <div class="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary group-hover:scale-110 transition-all duration-500">
+                                <i class="fas fa-chess-knight text-2xl text-secondary group-hover:text-white"></i>
+                            </div>
+                            <h3 class="card-title text-lg font-bold text-white">Cờ vua & Cờ tướng</h3>
+                            <p class="text-sm text-white/40">Giao lưu chiến thuật và kinh nghiệm chơi cờ.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== SKILLS ====== -->
+        <section id="skills" class="py-20 px-4 container mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="badge badge-accent badge-outline badge-lg px-4 py-3 mb-4 border-accent/30 text-accent"><i class="fas fa-brain mr-2"></i> Kỹ năng</div>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4 text-white">Năng lực <span class="text-gradient-animated">chuyên môn</span></h2>
+                <p class="text-white/40 max-w-2xl mx-auto text-lg">Các kỹ năng và lĩnh vực tôi đã trau dồi qua 3 năm hoạt động.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="glass-premium rounded-2xl p-6 border border-white/5" data-aos="fade-right">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white/70 font-medium">Biên tập Wikipedia</span>
+                        <span class="text-primary font-bold">95%</span>
+                    </div>
+                    <div class="skill-bar"><div class="fill animate" style="--target: 95%; width: 95%;"></div></div>
+                </div>
+
+                <div class="glass-premium rounded-2xl p-6 border border-white/5" data-aos="fade-left">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white/70 font-medium">Dịch thuật (EN/FR→VI)</span>
+                        <span class="text-secondary font-bold">85%</span>
+                    </div>
+                    <div class="skill-bar"><div class="fill animate" style="--target: 85%; width: 85%;"></div></div>
+                </div>
+
+                <div class="glass-premium rounded-2xl p-6 border border-white/5" data-aos="fade-right" data-aos-delay="100">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white/70 font-medium">Wikitext & Template</span>
+                        <span class="text-accent font-bold">90%</span>
+                    </div>
+                    <div class="skill-bar"><div class="fill animate" style="--target: 90%; width: 90%;"></div></div>
+                </div>
+
+                <div class="glass-premium rounded-2xl p-6 border border-white/5" data-aos="fade-left" data-aos-delay="100">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-white/70 font-medium">Nội dung Văn-Sử-Địa</span>
+                        <span class="text-info font-bold">88%</span>
+                    </div>
+                    <div class="skill-bar"><div class="fill animate" style="--target: 88%; width: 88%;"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== CONTACT ====== -->
+        <section id="contact" class="py-20 px-4 container mx-auto">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <div class="badge badge-accent badge-outline badge-lg px-4 py-3 mb-4 border-accent/30 text-accent"><i class="fas fa-heart mr-2"></i> Liên hệ</div>
+                <h2 class="text-4xl md:text-5xl font-bold mb-4 text-white">Kết nối & <span class="text-gradient-animated">Giao lưu</span></h2>
+                <p class="text-white/40 max-w-2xl mx-auto text-lg">Luôn sẵn sàng lắng nghe, hỗ trợ và giao lưu. Đừng ngần ngại liên hệ với tôi.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <a href="mailto:len60148@gmail.com" class="card glass-premium border border-white/5 hover:border-primary/40 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="0">
+                    <div class="card-body items-center text-center p-8">
+                        <div class="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all duration-500">
+                            <i class="fas fa-envelope text-3xl text-primary group-hover:text-white"></i>
+                        </div>
+                        <h3 class="font-bold text-xl text-white">Email</h3>
+                        <p class="text-white/60 group-hover:text-primary transition-colors">len60148@gmail.com</p>
+                    </div>
+                </a>
+
+                <a href="tel:0848107070" class="card glass-premium border border-white/5 hover:border-secondary/40 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card-body items-center text-center p-8">
+                        <div class="w-20 h-20 rounded-2xl bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary group-hover:scale-110 transition-all duration-500">
+                            <i class="fas fa-phone-alt text-3xl text-secondary group-hover:text-white"></i>
+                        </div>
+                        <h3 class="font-bold text-xl text-white">Điện thoại</h3>
+                        <p class="text-white/60 group-hover:text-secondary transition-colors">0848 107 070</p>
+                    </div>
+                </a>
+
+                <div class="card glass-premium border border-white/5 hover:border-accent/40 card-3d transition-all duration-500 group" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card-body items-center text-center p-8">
+                        <div class="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent group-hover:scale-110 transition-all duration-500">
+                            <i class="fas fa-map-marker-alt text-3xl text-accent group-hover:text-white"></i>
+                        </div>
+                        <h3 class="font-bold text-xl text-white">Địa chỉ</h3>
+                        <p class="text-white/60">Đồng Nai, Việt Nam</p>
+                        <div class="badge badge-outline mt-3 gap-2 px-4 py-3 border-white/10 text-white/40">
+                            <i class="fas fa-birthday-cake text-xs"></i> 13/7
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== FOOTER ====== -->
+        <footer class="footer footer-center p-12 glass-premium border-t border-white/5 text-white/40">
+            <aside>
+                <div class="flex items-center gap-3 text-2xl font-bold mb-4 text-white">
+                    <i class="fas fa-feather-alt text-primary float-particle"></i>
+                    <span>NLTK<span class="text-primary">.io</span></span>
+                </div>
+                <p class="font-medium text-white/60">© 2024 - 2026 Nguyễn Lê Trí Kiệt.</p>
+                <p class="flex items-center gap-2 justify-center">
+                    <i class="fas fa-heart text-accent animate-pulse"></i>
+                    <span class="text-primary font-bold">Vui là chính!</span>
+                    <i class="fas fa-heart text-accent animate-pulse" style="animation-delay: 0.5s;"></i>
+                </p>
+                <p class="text-sm text-white/30">Biên tập viên Wikipedia & Người đam mê tri thức.</p>
+            </aside>
+            <nav class="flex gap-6 mt-4">
+                <a href="#" class="link link-hover hover:text-primary transition-all duration-300 text-xl text-white/40 hover:text-white"><i class="fab fa-github"></i></a>
+                <a href="#" class="link link-hover hover:text-primary transition-all duration-300 text-xl text-white/40 hover:text-white"><i class="fab fa-facebook"></i></a>
+                <a href="#" class="link link-hover hover:text-primary transition-all duration-300 text-xl text-white/40 hover:text-white"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="link link-hover hover:text-primary transition-all duration-300 text-xl text-white/40 hover:text-white"><i class="fas fa-globe"></i></a>
+            </nav>
+        </footer>
+    </div>
+
+    <!-- ====== THREE.JS BACKGROUND - CẢI TIẾN ====== -->
+    <script>
+        (function() {
+            const container = document.getElementById('canvas-container');
+
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a18);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 35;
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // ---- TẠO CÁC ĐỐI TƯỢNG 3D ----
+            const shapes = [];
+            const colors = [0x06b6d4, 0x8b5cf6, 0xf472b6, 0x22d3ee, 0xa78bfa, 0x34d399, 0xf59e0b, 0xec4899];
+
+            function createShape() {
+                const type = Math.random();
+                let geometry;
+                if (type < 0.25) {
+                    geometry = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+                } else if (type < 0.5) {
+                    geometry = new THREE.DodecahedronGeometry(0.55);
+                } else if (type < 0.7) {
+                    geometry = new THREE.TorusKnotGeometry(0.45, 0.18, 64, 8);
+                } else if (type < 0.85) {
+                    geometry = new THREE.OctahedronGeometry(0.6);
+                } else {
+                    geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
+                }
+
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const material = new THREE.MeshStandardMaterial({
+                    color: color,
+                    roughness: 0.15 + Math.random() * 0.3,
+                    metalness: 0.6 + Math.random() * 0.4,
+                    transparent: true,
+                    opacity: 0.5 + Math.random() * 0.4,
+                    wireframe: Math.random() > 0.6,
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+
+                // Phân bố rộng hơn, trôi nổi tự do
+                const radius = 35 + Math.random() * 15;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                mesh.position.x = radius * Math.sin(phi) * Math.cos(theta);
+                mesh.position.y = radius * Math.sin(phi) * Math.sin(theta) * 0.6;
+                mesh.position.z = radius * Math.cos(phi) * 0.5;
+
+                // Tốc độ di chuyển nhanh hơn
+                mesh.userData = {
+                    rotX: (Math.random() - 0.5) * 0.025,
+                    rotY: (Math.random() - 0.5) * 0.025,
+                    rotZ: (Math.random() - 0.5) * 0.015,
+                    // Di chuyển theo quỹ đạo tròn
+                    orbitSpeed: 0.002 + Math.random() * 0.006,
+                    orbitRadius: radius,
+                    theta: theta,
+                    phi: phi,
+                    floatSpeed: 0.005 + Math.random() * 0.01,
+                    floatOffset: Math.random() * Math.PI * 2,
+                    floatAmp: 0.3 + Math.random() * 0.5,
+                };
+
+                scene.add(mesh);
+                shapes.push(mesh);
+                return mesh;
+            }
+
+            // Tạo 80 đối tượng
+            for (let i = 0; i < 80; i++) {
+                createShape();
+            }
+
+            // ---- ÁNH SÁNG ----
+            const ambientLight = new THREE.AmbientLight(0x404070, 0.6);
+            scene.add(ambientLight);
+
+            const light1 = new THREE.PointLight(0x06b6d4, 2, 60);
+            light1.position.set(20, 20, 20);
+            scene.add(light1);
+
+            const light2 = new THREE.PointLight(0x8b5cf6, 2, 60);
+            light2.position.set(-20, -15, 25);
+            scene.add(light2);
+
+            const light3 = new THREE.PointLight(0xf472b6, 1.5, 50);
+            light3.position.set(0, -25, 15);
+            scene.add(light3);
+
+            const light4 = new THREE.DirectionalLight(0xffffff, 0.5);
+            light4.position.set(-10, 20, 30);
+            scene.add(light4);
+
+            // ---- SAO NỀN ----
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsCount = 800;
+            const starPositions = new Float32Array(starsCount * 3);
+            const starSizes = new Float32Array(starsCount);
+            for (let i = 0; i < starsCount * 3; i += 3) {
+                const r = 60 + Math.random() * 60;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                starPositions[i] = r * Math.sin(phi) * Math.cos(theta);
+                starPositions[i+1] = r * Math.sin(phi) * Math.sin(theta);
+                starPositions[i+2] = r * Math.cos(phi);
+                starSizes[i/3] = 0.1 + Math.random() * 0.3;
+            }
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            starsGeometry.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+            
+            const starsMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.15,
+                transparent: true,
+                opacity: 0.5,
+                blending: THREE.AdditiveBlending,
+            });
+            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+
+            // ---- ANIMATION ----
+            let time = 0;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.01;
+
+                shapes.forEach((mesh) => {
+                    // Xoay liên tục
+                    mesh.rotation.x += mesh.userData.rotX;
+                    mesh.rotation.y += mesh.userData.rotY;
+                    mesh.rotation.z += mesh.userData.rotZ;
+
+                    // Di chuyển theo quỹ đạo tròn + lơ lửng
+                    const data = mesh.userData;
+                    data.theta += data.orbitSpeed;
+                    
+                    // Lơ lửng lên xuống nhanh hơn
+                    const floatY = Math.sin(time * data.floatSpeed + data.floatOffset) * data.floatAmp;
+                    const floatX = Math.cos(time * data.floatSpeed * 0.7 + data.floatOffset * 1.2) * 0.3;
+                    const floatZ = Math.sin(time * data.floatSpeed * 0.5 + data.floatOffset * 0.8) * 0.3;
+
+                    mesh.position.x = data.orbitRadius * Math.sin(data.theta) * Math.cos(data.phi) + floatX;
+                    mesh.position.y = data.orbitRadius * Math.sin(data.theta) * Math.sin(data.phi) * 0.6 + floatY;
+                    mesh.position.z = data.orbitRadius * Math.cos(data.theta) * 0.5 + floatZ;
+                });
+
+                // Xoay hệ sao chậm
+                stars.rotation.x += 0.0002;
+                stars.rotation.y += 0.0004;
+
+                // Di chuyển đèn
+                light1.position.x = 25 * Math.cos(time * 0.2);
+                light1.position.z = 25 * Math.sin(time * 0.2);
+                light2.position.x = 25 * Math.cos(time * 0.15 + 2);
+                light2.position.z = 25 * Math.sin(time * 0.15 + 2);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // ---- RESIZE ----
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // ---- MOUSE FOLLOW NHẸ ----
+            let mouseX = 0, mouseY = 0;
+            let targetX = 0, targetY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+                mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+            });
+
+            // Dùng interval để cập nhật camera mượt mà
+            setInterval(() => {
+                targetX += (mouseX - targetX) * 0.05;
+                targetY += (mouseY - targetY) * 0.05;
+                camera.position.x = targetX * 3;
+                camera.position.y = -targetY * 2.5;
+                camera.lookAt(0, 0, 0);
+            }, 16);
+
+        })();
+    </script>
+
+    <!-- ====== AOS ====== -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,
+            offset: 80,
+            duration: 800,
+            easing: 'ease-out-cubic',
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll('.fill').forEach(bar => {
+                        const target = bar.style.width;
+                        bar.style.width = '0';
+                        setTimeout(() => {
+                            bar.style.width = target;
+                        }, 100);
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('#skills .glass-premium').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+
+</body>
+</html>
